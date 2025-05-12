@@ -87,7 +87,7 @@ class MatrixImpl implements Matrix {
         return elements.get(row).get(col);
     }
 
-    public void set(int row, int col, Scalar value) { //11번
+    public void setValue(int row, int col, Scalar value) { //11번
         elements.get(row).set(col, value.clone());
     }
 
@@ -108,7 +108,7 @@ class MatrixImpl implements Matrix {
         if (this.getRowCount() != other.getRowCount() || this.getColumnCount() != other.getColumnCount()) return false;
         for (int i = 0; i < this.getRowCount(); i++) {
             for (int j = 0; j < this.getColumnCount(); j++) {
-                if (!this.get(i, j).equals(other.get(i, j))) return false;
+                if (!this.get(i, j).equals(other.getValue(i, j))) return false;
             }
         }
         return true;
@@ -129,7 +129,7 @@ class MatrixImpl implements Matrix {
             throw new DimensionMismatchException("Matrix size mismatch.");
         for (int i = 0; i < getRowCount(); i++) {
             for (int j = 0; j < getColumnCount(); j++) {
-                this.get(i, j).add(other.get(i, j));
+                this.get(i, j).add(other.getValue(i, j));
             }
         }
     }
@@ -145,7 +145,7 @@ class MatrixImpl implements Matrix {
                 Scalar sum = new ScalarImpl("0");
                 for (int k = 0; k < this.getColumnCount(); k++) {
                     Scalar temp = this.get(i, k).clone();
-                    temp.multiply(other.get(k, j));
+                    temp.multiply(other.getValue(k, j));
                     sum.add(temp);
                 }
                 result[i][j] = sum;
@@ -239,7 +239,7 @@ class MatrixImpl implements Matrix {
             for (int j = 0; j < colCount; j++) {
                 Scalar val = copy.get(r, j).clone();
                 val = new ScalarImpl(val.getValue().divide(div.getValue(), 20, BigDecimal.ROUND_HALF_UP).toPlainString());
-                copy.set(r, j, val);
+                copy.setValue(r, j, val);
             }
             for (int j = 0; j < rowCount; j++) {
                 if (j != r) {
@@ -249,7 +249,7 @@ class MatrixImpl implements Matrix {
                         Scalar temp = copy.get(r, k).clone();
                         temp.multiply(mult);
                         val = new ScalarImpl(val.getValue().subtract(temp.getValue()).toPlainString());
-                        copy.set(j, k, val);
+                        copy.setValue(j, k, val);
                     }
                 }
             }
@@ -370,7 +370,7 @@ class MatrixImpl implements Matrix {
         for (int j = 0; j < getColumnCount(); j++) {
             Scalar temp = get(rowIndex, j).clone();
             temp.multiply(scalar);
-            set(rowIndex, j, temp);
+            setValue(rowIndex, j, temp);
         }
     }
     // 역행렬 구하기 (Gauss-Jordan 방법)
@@ -405,8 +405,8 @@ class MatrixImpl implements Matrix {
                 Scalar idVal = identity.get(i, j).clone();
                 augVal = new ScalarImpl(augVal.getValue().divide(pivot.getValue(), 20, BigDecimal.ROUND_HALF_UP).toPlainString());
                 idVal = new ScalarImpl(idVal.getValue().divide(pivot.getValue(), 20, BigDecimal.ROUND_HALF_UP).toPlainString());
-                augmented.set(i, j, augVal);
-                identity.set(i, j, idVal);
+                augmented.setValue(i, j, augVal);
+                identity.setValue(i, j, idVal);
             }
 
             // 다른 행들에서 i번째 열을 0으로 만들기
@@ -425,8 +425,8 @@ class MatrixImpl implements Matrix {
                     augVal = new ScalarImpl(augVal.getValue().subtract(tempAug.getValue()).toPlainString());
                     idVal = new ScalarImpl(idVal.getValue().subtract(tempId.getValue()).toPlainString());
 
-                    augmented.set(k, j, augVal);
-                    identity.set(k, j, idVal);
+                    augmented.setValue(k, j, augVal);
+                    identity.setValue(k, j, idVal);
                 }
             }
         }
@@ -459,7 +459,7 @@ class MatrixImpl implements Matrix {
         for (int i = 0; i < getRowCount(); i++) {
             Scalar temp = get(i, colIndex).clone();
             temp.multiply(scalar);
-            set(i, colIndex, temp);
+            setValue(i, colIndex, temp);
         }
     }
 
@@ -471,7 +471,7 @@ class MatrixImpl implements Matrix {
             temp.multiply(scalar);
             Scalar newVal = get(targetRow, j).clone();
             newVal.add(temp);
-            set(targetRow, j, newVal);
+            setValue(targetRow, j, newVal);
         }
     }
 
@@ -483,7 +483,7 @@ class MatrixImpl implements Matrix {
             temp.multiply(scalar);
             Scalar newVal = get(i, targetCol).clone();
             newVal.add(temp);
-            set(i, targetCol, newVal);
+            setValue(i, targetCol, newVal);
         }
     }
 

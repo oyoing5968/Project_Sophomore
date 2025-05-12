@@ -9,4 +9,7 @@ public interface Scalar extends Comparable<Scalar>, Cloneable {
     Scalar clone();
     void add(Scalar other);
     void multiply(Scalar other);
+    static Scalar add(Scalar a, Scalar b);
+    static Scalar multiply(Scalar a, Scalar b);
+
 }

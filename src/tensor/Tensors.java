@@ -20,7 +20,7 @@ public class Tensors {
         }
         Scalar[] sum = new Scalar[a.size()];
         for (int i = 0; i < a.size(); i++) {
-            sum[i] = Tensors.add(a.get(i), b.get(i));
+            sum[i] = Tensors.add(a.getValue(i), b.getValue(i));
         }
         return Factory.createVector(sum);
     }
@@ -28,7 +28,7 @@ public class Tensors {
     public static Vector multiply(Vector v, Scalar s) {
         Scalar[] prod = new Scalar[v.size()];
         for (int i = 0; i < v.size(); i++) {
-            prod[i] = Tensors.multiply(v.get(i), s);
+            prod[i] = Tensors.multiply(v.getValue(i), s);
         }
         return Factory.createVector(prod);
     }

@@ -35,17 +35,17 @@ class VectorImpl implements Vector {
         if (!(obj instanceof Vector)) return false;
         Vector other = (Vector) obj;
         if (this.size() != other.size()) return false;
-        for (int i = 0; i < size(); i++) if (!get(i).equals(other.get(i))) return false;
+        for (int i = 0; i < size(); i++) if (!getValue(i).equals(other.getValue(i))) return false;
         return true;
     }
     public Vector clone() {
         Scalar[] copy = new Scalar[size()];
-        for (int i = 0; i < size(); i++) copy[i] = get(i).clone();
+        for (int i = 0; i < size(); i++) copy[i] = getValue(i).clone();
         return new VectorImpl(copy);
     }
     public void add(Vector other) {
         if (size() != other.size()) throw new DimensionMismatchException("Vector size mismatch");
-        for (int i = 0; i < size(); i++) get(i).add(other.get(i));
+        for (int i = 0; i < size(); i++) getValue(i).add(other.getValue(i));
     }
     public void multiply(Scalar scalar) {
         for (Scalar s : elements) s.multiply(scalar);
@@ -54,7 +54,7 @@ class VectorImpl implements Vector {
     public Matrix toRowMatrix() {
         Scalar[][] arr = new Scalar[1][size()];
         for (int i = 0; i < size(); i++) {
-            arr[0][i] = get(i).clone();
+            arr[0][i] = getValue(i).clone();
         }
         return new MatrixImpl(arr);
     }
@@ -63,9 +63,10 @@ class VectorImpl implements Vector {
     public Matrix toColumnMatrix() {
         Scalar[][] arr = new Scalar[size()][1];
         for (int i = 0; i < size(); i++) {
-            arr[i][0] = get(i).clone();
+            arr[i][0] = getValue(i).clone();
         }
         return new MatrixImpl(arr);
     }
+
 
 }

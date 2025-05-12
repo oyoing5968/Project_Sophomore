@@ -52,15 +52,15 @@ public class Test {
 
         System.out.println("\n===== MATRIX ADVANCED TEST =====");
         Matrix square = Factory.createMatrix(3, 3, Factory.createScalar("0"));
-        square.set(0, 0, Factory.createScalar("2"));
-        square.set(0, 1, Factory.createScalar("3"));
-        square.set(0, 2, Factory.createScalar("1"));
-        square.set(1, 0, Factory.createScalar("4"));
-        square.set(1, 1, Factory.createScalar("1"));
-        square.set(1, 2, Factory.createScalar("5"));
-        square.set(2, 0, Factory.createScalar("6"));
-        square.set(2, 1, Factory.createScalar("2"));
-        square.set(2, 2, Factory.createScalar("1"));
+        square.setValue(0, 0, Factory.createScalar("2"));
+        square.setValue(0, 1, Factory.createScalar("3"));
+        square.setValue(0, 2, Factory.createScalar("1"));
+        square.setValue(1, 0, Factory.createScalar("4"));
+        square.setValue(1, 1, Factory.createScalar("1"));
+        square.setValue(1, 2, Factory.createScalar("5"));
+        square.setValue(2, 0, Factory.createScalar("6"));
+        square.setValue(2, 1, Factory.createScalar("2"));
+        square.setValue(2, 2, Factory.createScalar("1"));
 
         System.out.println("Square matrix:\n" + square);
         System.out.println("Transpose:\n" + Tensors.transpose(square));
@@ -86,10 +86,10 @@ public class Test {
 
         System.out.println("\n===== INVERSE TEST =====");
         Matrix m = Factory.createMatrix(2, 2, Factory.createScalar("0"));
-        m.set(0, 0, Factory.createScalar("4"));
-        m.set(0, 1, Factory.createScalar("7"));
-        m.set(1, 0, Factory.createScalar("2"));
-        m.set(1, 1, Factory.createScalar("6"));
+        m.setValue(0, 0, Factory.createScalar("4"));
+        m.setValue(0, 1, Factory.createScalar("7"));
+        m.setValue(1, 0, Factory.createScalar("2"));
+        m.setValue(1, 1, Factory.createScalar("6"));
         System.out.println("Matrix m:\n" + m);
         Matrix inv = Tensors.inverse(m);
         System.out.println("Inverse of m:\n" + inv);
@@ -103,7 +103,7 @@ public class Test {
 
 // 열 교환 테스트
         //Matrix m1 = Factory.createMatrix(3, 3, Factory.createScalar("1"));
-        m1.set(0, 1, Factory.createScalar("2"));  // 인터페이스에서 제공
+        m1.setValue(0, 1, Factory.createScalar("2"));  // 인터페이스에서 제공
         System.out.println("\nBefore swapColumns(0,1):\n" + m1);
         m1.swapColumns(0, 1);
         System.out.println("After swapColumns(0,1):\n" + m1);
