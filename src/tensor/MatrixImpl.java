@@ -1,13 +1,11 @@
 package tensor;
-
 import java.io.*;
 import java.util.*;
 import java.math.BigDecimal;
-
 class MatrixImpl implements Matrix {
     private List<List<Scalar>> elements;
 
-    MatrixImpl(int m, int n, Scalar val) { //6번
+    MatrixImpl(int m, int n, Scalar val) {
         if (m <= 0 || n <= 0) throw new IllegalArgumentException("Invalid dimensions.");
         elements = new ArrayList<>();
         for (int i = 0; i < m; i++) {
@@ -18,8 +16,7 @@ class MatrixImpl implements Matrix {
             elements.add(row);
         }
     }
-
-    MatrixImpl(int i, int j, int m, int n) { //7번
+    MatrixImpl(int i, int j, int m, int n) {
         if (i >= j || m <= 0 || n <= 0) throw new IllegalArgumentException("Invalid parameters.");
         elements = new ArrayList<>();
         for (int row = 0; row < m; row++) {
@@ -30,7 +27,7 @@ class MatrixImpl implements Matrix {
             elements.add(newRow);
         }
     }
-    MatrixImpl(String csvPath) throws IOException {  //9번
+    MatrixImpl(String csvPath) throws IOException {
         elements = new ArrayList<>();
         BufferedReader reader = new BufferedReader(new FileReader(csvPath));
         String line;
@@ -45,7 +42,9 @@ class MatrixImpl implements Matrix {
         reader.close();
     }
 
-    MatrixImpl(Scalar[][] arr) { //8번
+
+
+    MatrixImpl(Scalar[][] arr) {
         elements = new ArrayList<>();
         for (Scalar[] row : arr) {
             List<Scalar> newRow = new ArrayList<>();
@@ -56,200 +55,400 @@ class MatrixImpl implements Matrix {
         }
     }
 
-    MatrixImpl(int Size) { //10번
-        if (Size <= 0) throw new IllegalArgumentException("Invalid dimension.");
-
-        Scalar one = new ScalarImpl("1");
-        Scalar zero = new ScalarImpl("0");
-
+    MatrixImpl(int n) {
         elements = new ArrayList<>();
-
-        for (int i = 0; i < Size; i++) {
+        for (int i = 0; i < n; i++) {
             List<Scalar> row = new ArrayList<>();
-            for (int j = 0; j < Size; j++) {
-                row.add(zero.clone());
+            for (int j = 0; j < n; j++) {
+                row.add(new ScalarImpl(i == j ? "1" : "0"));
             }
             elements.add(row);
         }
     }
 
-
-    public int getRowCount() {
-        return elements.size();
+    MatrixImpl Identity(int n){
+        return null;
     }
 
+    public Scalar getValue(int row, int col) {
+        if (row < 0 || row >= getRowCount() || col < 0 || col >= getColumnCount()) {
+            throw new IndexOutOfBoundsException("Matrix index out of bounds: (" + row + ", " + col + ")");
+        }
+        return elements.get(row).get(col).clone();
+    }
+
+    public void setValue(int row, int col, Scalar val) {
+        if (row < 0 || row >= getRowCount() || col < 0 || col >= getColumnCount()) {
+            throw new IndexOutOfBoundsException("Matrix index out of bounds: (" + row + ", " + col + ")");
+        }
+        elements.get(row).set(col, val.clone());
+    }
+    //여기까지함
+
+    public int getRowCount() {//13번
+        return elements.size();
+    }
     public int getColumnCount() {
         if (elements.isEmpty()) return 0;
         return elements.get(0).size();
     }
-
-    public Scalar get(int row, int col) { //11번
-        return elements.get(row).get(col);
-    }
-
-    public void setValue(int row, int col, Scalar value) { //11번
-        elements.get(row).set(col, value.clone());
-    }
-
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (List<Scalar> row : elements) {
-            for (Scalar s : row) {
-                sb.append(s.toString()).append(" ");
+        for (int i = 0; i < elements.size(); i++) {
+            sb.append("[");
+            List<Scalar> row = elements.get(i);
+            for (int j = 0; j < row.size(); j++) {
+                sb.append(row.get(j).toString());
+                if (j < row.size() - 1) sb.append(", ");
             }
-            sb.append("\n");
+            sb.append("]");
+            if (i < elements.size() - 1) sb.append("\n");
         }
         return sb.toString();
     }
-
+    @Override
     public boolean equals(Object obj) {
+        if (this == obj) return true;
         if (!(obj instanceof Matrix)) return false;
         Matrix other = (Matrix) obj;
-        if (this.getRowCount() != other.getRowCount() || this.getColumnCount() != other.getColumnCount()) return false;
-        for (int i = 0; i < this.getRowCount(); i++) {
-            for (int j = 0; j < this.getColumnCount(); j++) {
-                if (!this.get(i, j).equals(other.getValue(i, j))) return false;
+        if (this.rowSize() != other.rowSize() || this.colSize() != other.colSize()) return false;
+        for (int i = 0; i < this.rowSize(); i++) {
+            for (int j = 0; j < this.colSize(); j++) {
+                if (!this.getValue(i, j).equals(other.getValue(i, j))) return false;
             }
         }
         return true;
     }
 
+    @Override
+    public int rowSize() {
+        return getRowCount();
+    }
+    @Override
+    public int colSize() {
+        return getColumnCount();
+    }
+
+    @Override
     public Matrix clone() {
-        Scalar[][] copied = new Scalar[this.getRowCount()][this.getColumnCount()];
-        for (int i = 0; i < this.getRowCount(); i++) {
-            for (int j = 0; j < this.getColumnCount(); j++) {
-                copied[i][j] = this.get(i, j).clone();
+        int rows = this.rowSize();
+        int cols = this.colSize();
+        Scalar[][] arr = new Scalar[rows][cols];
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                arr[i][j] = this.getValue(i, j).clone();
             }
         }
-        return new MatrixImpl(copied);
+        return new MatrixImpl(arr);
     }
 
-    public void add(Matrix other) { //
-        if (this.getRowCount() != other.getRowCount() || this.getColumnCount() != other.getColumnCount())
-            throw new DimensionMismatchException("Matrix size mismatch.");
-        for (int i = 0; i < getRowCount(); i++) {
-            for (int j = 0; j < getColumnCount(); j++) {
-                this.get(i, j).add(other.getValue(i, j));
+    @Override
+    public void add(Matrix other) {
+        if (this.rowSize() != other.rowSize() || this.colSize() != other.colSize()) {
+            throw new IllegalArgumentException("행렬의 크기가 다릅니다.");
+        }
+        for (int i = 0; i < this.rowSize(); i++) {
+            for (int j = 0; j < this.colSize(); j++) {
+                this.getValue(i, j).add(other.getValue(i, j));
             }
         }
     }
 
-    public void multiply(Matrix other) { //
-        if (this.getColumnCount() != other.getRowCount())
-            throw new DimensionMismatchException("Matrix multiplication dimension mismatch.");
-        int m = this.getRowCount();
-        int n = other.getColumnCount();
-        Scalar[][] result = new Scalar[m][n];
+    @Override
+    public void multiply(Matrix other) {
+        if (this.colSize() != other.rowSize()) {
+            throw new IllegalArgumentException("행렬 곱셈 조건이 맞지 않습니다.");
+        }
+        int m = this.rowSize();
+        int n = this.colSize();
+        int l = other.colSize();
+        List<List<Scalar>> result = new ArrayList<>();
         for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                Scalar sum = new ScalarImpl("0");
-                for (int k = 0; k < this.getColumnCount(); k++) {
-                    Scalar temp = this.get(i, k).clone();
-                    temp.multiply(other.getValue(k, j));
-                    sum.add(temp);
+            List<Scalar> row = new ArrayList<>();
+            for (int j = 0; j < l; j++) {
+                BigDecimal sum = BigDecimal.ZERO;
+                for (int k = 0; k < n; k++) {
+                    BigDecimal a = new BigDecimal(this.getValue(i, k).getValue());
+                    BigDecimal b = new BigDecimal(other.getValue(k, j).getValue());
+                    sum = sum.add(a.multiply(b));
                 }
-                result[i][j] = sum;
+                row.add(new ScalarImpl(sum.toPlainString()));
             }
+            result.add(row);
         }
-        this.elements.clear();
-        for (int i = 0; i < m; i++) {
-            List<Scalar> newRow = new ArrayList<>();
-            for (int j = 0; j < n; j++) {
-                newRow.add(result[i][j]);
-            }
-            this.elements.add(newRow);
-        }
+        this.elements = result;
     }
 
-    // 고급 기능 추가
-    public Matrix transpose() {
-        int m = this.getRowCount();
-        int n = this.getColumnCount();
-        Scalar[][] transposed = new Scalar[n][m];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                transposed[j][i] = this.get(i, j).clone();
-            }
+    @Override
+    public Vector getRowVector(int row) { //34번
+        if (row < 0 || row >= this.rowSize()) {
+            throw new IndexOutOfBoundsException("행 인덱스가 범위를 벗어났습니다.");
         }
-        return new MatrixImpl(transposed);
+        Scalar[] arr = new Scalar[this.colSize()];
+        for (int j = 0; j < this.colSize(); j++) {
+            arr[j] = this.getValue(row, j).clone();
+        }
+        return new VectorImpl(arr);
     }
 
-    public Matrix minor(int rowToRemove, int colToRemove) {
-        int m = this.getRowCount();
-        int n = this.getColumnCount();
-        Scalar[][] result = new Scalar[m - 1][n - 1];
-        for (int i = 0, r = 0; i < m; i++) {
-            if (i == rowToRemove) continue;
-            for (int j = 0, c = 0; j < n; j++) {
-                if (j == colToRemove) continue;
-                result[r][c] = this.get(i, j).clone();
+    @Override
+    public Vector getColVector(int col) { //35번
+        if (col < 0 || col >= this.colSize()) {
+            throw new IndexOutOfBoundsException("열 인덱스가 범위를 벗어났습니다.");
+        }
+        Scalar[] arr = new Scalar[this.rowSize()];
+        for (int i = 0; i < this.rowSize(); i++) {
+            arr[i] = this.getValue(i, col).clone();
+        }
+        return new VectorImpl(arr);
+    }
+
+    @Override
+    public Matrix extractSubMatrix(int rowStart, int rowEnd, int colStart, int colEnd) { //36번
+        if (rowStart < 0 || rowEnd > this.rowSize() || colStart < 0 || colEnd > this.colSize() || rowStart >= rowEnd || colStart >= colEnd) {
+            throw new IndexOutOfBoundsException("부분 행렬 인덱스가 범위를 벗어났습니다.");
+        }
+        int rows = rowEnd - rowStart;
+        int cols = colEnd - colStart;
+        Scalar[][] arr = new Scalar[rows][cols];
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                arr[i][j] = this.getValue(rowStart + i, colStart + j).clone();
+            }
+        }
+        return new MatrixImpl(arr);
+    }
+
+    @Override
+    public Matrix minorSubMatrix(int row, int col) { //37번
+        if (row < 0 || row >= this.rowSize() || col < 0 || col >= this.colSize()) {
+            throw new IndexOutOfBoundsException("minor 인덱스가 범위를 벗어났습니다.");
+        }
+        int rows = this.rowSize() - 1;
+        int cols = this.colSize() - 1;
+        Scalar[][] arr = new Scalar[rows][cols];
+        int r = 0;
+        for (int i = 0; i < this.rowSize(); i++) {
+            if (i == row) continue;
+            int c = 0;
+            for (int j = 0; j < this.colSize(); j++) {
+                if (j == col) continue;
+                arr[r][c] = this.getValue(i, j).clone();
                 c++;
             }
             r++;
         }
-        return new MatrixImpl(result);
+        return new MatrixImpl(arr);
     }
 
-    public Scalar trace() {
-        if (this.getRowCount() != this.getColumnCount())
-            throw new DimensionMismatchException("Trace only for square matrices.");
-        Scalar sum = new ScalarImpl("0");
-        for (int i = 0; i < getRowCount(); i++) {
-            sum.add(this.get(i, i));
+    @Override
+    public Matrix transposeMatrix(Matrix m) { //38번
+        int rows = m.rowSize();
+        int cols = m.colSize();
+        Scalar[][] arr = new Scalar[cols][rows];
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                arr[j][i] = m.getValue(i, j).clone();
+            }
         }
-        return sum;
+        return new MatrixImpl(arr);
     }
 
-    public Scalar determinant() {
-        if (this.getRowCount() != this.getColumnCount())
-            throw new DimensionMismatchException("Determinant only for square matrices.");
-        int n = getRowCount();
-        if (n == 1) return this.get(0, 0).clone();
-        Scalar det = new ScalarImpl("0");
-        for (int col = 0; col < n; col++) {
-            Matrix minor = this.minor(0, col);
-            Scalar cofactor = this.get(0, col).clone();
-            Scalar minorDet = ((MatrixImpl) minor).determinant();
-            if (col % 2 != 0) cofactor.multiply(new ScalarImpl("-1"));
-            cofactor.multiply(minorDet);
-            det.add(cofactor);
+    @Override
+    public double trace(Matrix m) { //39번
+        if (m.rowSize() != m.colSize()) {
+            throw new IllegalArgumentException("정사각 행렬이 아닙니다.");
         }
-        return det;
+        java.math.BigDecimal sum = java.math.BigDecimal.ZERO;
+        for (int i = 0; i < m.rowSize(); i++) {
+            sum = sum.add(new java.math.BigDecimal(m.getValue(i, i).getValue()));
+        }
+        return sum.doubleValue();
     }
 
-    public Matrix rref() {
-        MatrixImpl copy = (MatrixImpl) this.clone();
-        int lead = 0;
-        int rowCount = copy.getRowCount();
-        int colCount = copy.getColumnCount();
+    @Override
+    public boolean isSquare(Matrix m) { //40번
+        return m.rowSize() == m.colSize();
+    }
 
-        for (int r = 0; r < rowCount; r++) {
-            if (colCount <= lead) break;
-            int i = r;
-            while (copy.get(i, lead).getValue().compareTo(BigDecimal.ZERO) == 0) {
-                i++;
-                if (i == rowCount) {
-                    i = r;
-                    lead++;
-                    if (lead == colCount) return copy;
+    @Override
+    public boolean isUpperTriangular(Matrix m) { //41번
+        if (!isSquare(m)) return false;
+        for (int i = 1; i < m.rowSize(); i++) {
+            for (int j = 0; j < i; j++) {
+                if (!m.getValue(i, j).equals(new ScalarImpl("0"))) return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean isLowerTriangular(Matrix m) { //42번
+        if (!isSquare(m)) return false;
+        for (int i = 0; i < m.rowSize(); i++) {
+            for (int j = i + 1; j < m.colSize(); j++) {
+                if (!m.getValue(i, j).equals(new ScalarImpl("0"))) return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean isIdentity(Matrix m) { //43번
+        if (!isSquare(m)) return false;
+        for (int i = 0; i < m.rowSize(); i++) {
+            for (int j = 0; j < m.colSize(); j++) {
+                if (i == j) {
+                    if (!m.getValue(i, j).equals(new ScalarImpl("1"))) return false;
+                } else {
+                    if (!m.getValue(i, j).equals(new ScalarImpl("0"))) return false;
                 }
             }
-            Collections.swap(copy.elements, i, r);
-            Scalar div = copy.get(r, lead).clone();
-            for (int j = 0; j < colCount; j++) {
-                Scalar val = copy.get(r, j).clone();
-                val = new ScalarImpl(val.getValue().divide(div.getValue(), 20, BigDecimal.ROUND_HALF_UP).toPlainString());
-                copy.setValue(r, j, val);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean isZero(Matrix m) { //44번
+        for (int i = 0; i < m.rowSize(); i++) {
+            for (int j = 0; j < m.colSize(); j++) {
+                if (!m.getValue(i, j).equals(new ScalarImpl("0"))) return false;
             }
-            for (int j = 0; j < rowCount; j++) {
-                if (j != r) {
-                    Scalar mult = copy.get(j, lead).clone();
+        }
+        return true;
+    }
+
+    @Override
+    public Matrix rowSwap(int row1, int row2) { //45번
+        if (row1 < 0 || row2 < 0 || row1 >= this.rowSize() || row2 >= this.rowSize()) {
+            throw new IndexOutOfBoundsException("행 인덱스가 범위를 벗어났습니다.");
+        }
+        Matrix copy = this.clone();
+        for (int j = 0; j < this.colSize(); j++) {
+            Scalar temp = copy.getValue(row1, j);
+            copy.setValue(row1, j, copy.getValue(row2, j));
+            copy.setValue(row2, j, temp);
+        }
+        return copy;
+    }
+
+    @Override
+    public Matrix colSwap(int col1, int col2) { //46번
+        if (col1 < 0 || col2 < 0 || col1 >= this.colSize() || col2 >= this.colSize()) {
+            throw new IndexOutOfBoundsException("열 인덱스가 범위를 벗어났습니다.");
+        }
+        Matrix copy = this.clone();
+        for (int i = 0; i < this.rowSize(); i++) {
+            Scalar temp = copy.getValue(i, col1);
+            copy.setValue(i, col1, copy.getValue(i, col2));
+            copy.setValue(i, col2, temp);
+        }
+        return copy;
+    }
+
+    @Override
+    public Matrix rowMultiply(int index, Scalar val) { //47번
+        if (index < 0 || index >= this.rowSize()) {
+            throw new IndexOutOfBoundsException("행 인덱스가 범위를 벗어났습니다.");
+        }
+        Matrix copy = this.clone();
+        for (int j = 0; j < this.colSize(); j++) {
+            Scalar newVal = copy.getValue(index, j).clone();
+            newVal.multiply(val);
+            copy.setValue(index, j, newVal);
+        }
+        return copy;
+    }
+
+    @Override
+    public Matrix colMultiply(int index, Scalar val) { //48번
+        if (index < 0 || index >= this.colSize()) {
+            throw new IndexOutOfBoundsException("열 인덱스가 범위를 벗어났습니다.");
+        }
+        Matrix copy = this.clone();
+        for (int i = 0; i < this.rowSize(); i++) {
+            Scalar newVal = copy.getValue(i, index).clone();
+            newVal.multiply(val);
+            copy.setValue(i, index, newVal);
+        }
+        return copy;
+    }
+
+
+
+    @Override
+    public Matrix rowAddOtherRow(int targetRow, int sourceRow, Scalar factor) { //49번
+        Matrix copy = this.clone();
+        for (int j = 0; j < copy.colSize(); j++) {
+            Scalar addVal = copy.getValue(sourceRow, j).clone();
+            addVal.multiply(factor);
+            Scalar newVal = copy.getValue(targetRow, j).clone();
+            newVal.add(addVal);
+            copy.setValue(targetRow, j, newVal);
+        }
+        return copy;
+    }
+
+    @Override
+    public Matrix colAddOtherCol(int targetCol, int sourceCol, Scalar factor) { //50번
+        Matrix copy = this.clone();
+        for (int i = 0; i < copy.rowSize(); i++) {
+            Scalar addVal = copy.getValue(i, sourceCol).clone();
+            addVal.multiply(factor);
+            Scalar newVal = copy.getValue(i, targetCol).clone();
+            newVal.add(addVal);
+            copy.setValue(i, targetCol, newVal);
+        }
+        return copy;
+    }
+
+
+    @Override
+    public Matrix getRREF(Matrix m) { //51번
+        Matrix copy = m.clone();
+        int lead = 0;
+        int rowCount = copy.rowSize();
+        int colCount = copy.colSize();
+        for (int r = 0; r < rowCount; r++) {
+            if (lead >= colCount) break;
+            int i = r;
+            while (i < rowCount && copy.getValue(i, lead).equals(new ScalarImpl("0"))) {
+                i++;
+            }
+            if (i == rowCount) {
+                lead++;
+                if (lead >= colCount) break;
+                r--;
+                continue;
+            }
+            // swap rows i and r
+            if (i != r) {
+                for (int k = 0; k < colCount; k++) {
+                    Scalar temp = copy.getValue(r, k);
+                    copy.setValue(r, k, copy.getValue(i, k));
+                    copy.setValue(i, k, temp);
+                }
+            }
+            // divide row r by leading value
+            Scalar lv = copy.getValue(r, lead).clone();
+            for (int k = 0; k < colCount; k++) {
+                Scalar val = copy.getValue(r, k).clone();
+                if (!lv.equals(new ScalarImpl("0"))) {
+                    val = new ScalarImpl((new java.math.BigDecimal(val.getValue()).divide(new java.math.BigDecimal(lv.getValue()), java.math.MathContext.DECIMAL128)).toPlainString());
+                }
+                copy.setValue(r, k, val);
+            }
+            // eliminate other rows
+            for (int i2 = 0; i2 < rowCount; i2++) {
+                if (i2 != r) {
+                    Scalar lv2 = copy.getValue(i2, lead).clone();
                     for (int k = 0; k < colCount; k++) {
-                        Scalar val = copy.get(j, k).clone();
-                        Scalar temp = copy.get(r, k).clone();
-                        temp.multiply(mult);
-                        val = new ScalarImpl(val.getValue().subtract(temp.getValue()).toPlainString());
-                        copy.setValue(j, k, val);
+                        Scalar val = copy.getValue(i2, k).clone();
+                        Scalar sub = copy.getValue(r, k).clone();
+                        sub.multiply(lv2);
+                        val = new ScalarImpl((new java.math.BigDecimal(val.getValue()).subtract(new java.math.BigDecimal(sub.getValue()), java.math.MathContext.DECIMAL128)).toPlainString());
+                        copy.setValue(i2, k, val);
                     }
                 }
             }
@@ -257,254 +456,81 @@ class MatrixImpl implements Matrix {
         }
         return copy;
     }
-    // 특정 행을 Vector로 추출
-    public Vector getRowVector(int rowIndex) {
-        if (rowIndex < 0 || rowIndex >= getRowCount())
-            throw new IndexOutOfBoundsException("Row index out of bounds.");
 
-        Scalar[] row = new Scalar[getColumnCount()];
-        for (int j = 0; j < getColumnCount(); j++) {
-            row[j] = get(rowIndex, j).clone();
-        }
-        return new VectorImpl(row);
-    }
-
-    // 특정 열을 Vector로 추출
-    public Vector getColumnVector(int colIndex) {
-        if (colIndex < 0 || colIndex >= getColumnCount())
-            throw new IndexOutOfBoundsException("Column index out of bounds.");
-
-        Scalar[] col = new Scalar[getRowCount()];
-        for (int i = 0; i < getRowCount(); i++) {
-            col[i] = get(i, colIndex).clone();
-        }
-        return new VectorImpl(col);
-    }
-    // 두 행렬을 가로로 이어붙이기 (column 방향)
-    public static Matrix horizontalConcat(Matrix left, Matrix right) {
-        if (left.getRowCount() != right.getRowCount()) {
-            throw new DimensionMismatchException("Row counts must match for horizontal concatenation.");
-        }
-
-        Scalar[][] combined = new Scalar[left.getRowCount()][left.getColumnCount() + right.getColumnCount()];
-        for (int i = 0; i < left.getRowCount(); i++) {
-            for (int j = 0; j < left.getColumnCount(); j++) {
-                combined[i][j] = left.get(i, j).clone();
-            }
-            for (int j = 0; j < right.getColumnCount(); j++) {
-                combined[i][left.getColumnCount() + j] = right.get(i, j).clone();
-            }
-        }
-        return new MatrixImpl(combined);
-    }
-
-    // 두 행렬을 세로로 이어붙이기 (row 방향)
-    public static Matrix verticalConcat(Matrix top, Matrix bottom) {
-        if (top.getColumnCount() != bottom.getColumnCount()) {
-            throw new DimensionMismatchException("Column counts must match for vertical concatenation.");
-        }
-
-        Scalar[][] combined = new Scalar[top.getRowCount() + bottom.getRowCount()][top.getColumnCount()];
-        for (int i = 0; i < top.getRowCount(); i++) {
-            for (int j = 0; j < top.getColumnCount(); j++) {
-                combined[i][j] = top.get(i, j).clone();
-            }
-        }
-        for (int i = 0; i < bottom.getRowCount(); i++) {
-            for (int j = 0; j < bottom.getColumnCount(); j++) {
-                combined[top.getRowCount() + i][j] = bottom.get(i, j).clone();
-            }
-        }
-        return new MatrixImpl(combined);
-    }
-    // 상삼각행렬인지 판별
-    public boolean isUpperTriangular() {
-        if (getRowCount() != getColumnCount()) return false;
-        for (int i = 1; i < getRowCount(); i++) {
-            for (int j = 0; j < i; j++) {
-                if (get(i, j).getValue().compareTo(BigDecimal.ZERO) != 0) {
-                    return false;
+    @Override
+    public Matrix isRREF(Matrix m) { //52번
+        // 실제 RREF 판별: 각 행의 leading 1은 그 위, 아래 모두 0, leading 1의 위치는 오른쪽으로 이동
+        int prevLead = -1;
+        for (int i = 0; i < m.rowSize(); i++) {
+            int lead = -1;
+            for (int j = 0; j < m.colSize(); j++) {
+                if (!m.getValue(i, j).equals(new ScalarImpl("0"))) {
+                    if (!m.getValue(i, j).equals(new ScalarImpl("1"))) return null;
+                    lead = j;
+                    break;
                 }
             }
-        }
-        return true;
-    }
-
-    // 하삼각행렬인지 판별
-    public boolean isLowerTriangular() {
-        if (getRowCount() != getColumnCount()) return false;
-        for (int i = 0; i < getRowCount(); i++) {
-            for (int j = i + 1; j < getColumnCount(); j++) {
-                if (get(i, j).getValue().compareTo(BigDecimal.ZERO) != 0) {
-                    return false;
-                }
+            if (lead <= prevLead) return null;
+            for (int k = 0; k < m.rowSize(); k++) {
+                if (k != i && lead != -1 && !m.getValue(k, lead).equals(new ScalarImpl("0"))) return null;
             }
+            prevLead = lead;
         }
-        return true;
+        return m;
     }
 
-    // Zero Matrix인지 판별
-    public boolean isZeroMatrix() {
-        for (int i = 0; i < getRowCount(); i++) {
-            for (int j = 0; j < getColumnCount(); j++) {
-                if (get(i, j).getValue().compareTo(BigDecimal.ZERO) != 0) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-    // 두 행을 교환
-    public void swapRows(int row1, int row2) {
-        if (row1 < 0 || row2 < 0 || row1 >= getRowCount() || row2 >= getRowCount()) {
-            throw new IndexOutOfBoundsException("Row index out of bounds.");
-        }
-        Collections.swap(elements, row1, row2);
+    @Override
+    public Matrix getMatrix(Matrix m) { //53번
+        return m.clone();
     }
 
-    // 특정 행을 스케일링 (배수 곱하기)
-    public void scaleRow(int rowIndex, Scalar scalar) {
-        if (rowIndex < 0 || rowIndex >= getRowCount()) {
-            throw new IndexOutOfBoundsException("Row index out of bounds.");
-        }
-        for (int j = 0; j < getColumnCount(); j++) {
-            Scalar temp = get(rowIndex, j).clone();
-            temp.multiply(scalar);
-            setValue(rowIndex, j, temp);
-        }
-    }
-    // 역행렬 구하기 (Gauss-Jordan 방법)
-    public Matrix inverse() {
-        if (getRowCount() != getColumnCount()) {
-            throw new DimensionMismatchException("Inverse only for square matrices.");
-        }
-
-        int n = getRowCount();
-        MatrixImpl augmented = (MatrixImpl) this.clone();
-        MatrixImpl identity = (MatrixImpl) (new MatrixImpl(n, n, new ScalarImpl("0"))).identity(n);
-
+    @Override
+    public Matrix getInverseMatrix(Matrix m) { //54번
+        int n = m.rowSize();
+        if (n != m.colSize()) throw new IllegalArgumentException("정사각 행렬만 역행렬을 구할 수 있습니다.");
+        // 단위행렬 생성
+        Scalar[][] identity = new Scalar[n][n];
         for (int i = 0; i < n; i++) {
-            // 피벗이 0이면 밑에 행과 스왑
-            if (augmented.get(i, i).getValue().compareTo(BigDecimal.ZERO) == 0) {
-                boolean swapped = false;
-                for (int j = i + 1; j < n; j++) {
-                    if (augmented.get(j, i).getValue().compareTo(BigDecimal.ZERO) != 0) {
-                        augmented.swapRows(i, j);
-                        identity.swapRows(i, j);
-                        swapped = true;
-                        break;
-                    }
-                }
-                if (!swapped) throw new ArithmeticException("Matrix is singular and cannot be inverted.");
-            }
-
-            // 피벗을 1로 만들기
-            Scalar pivot = augmented.get(i, i).clone();
             for (int j = 0; j < n; j++) {
-                Scalar augVal = augmented.get(i, j).clone();
-                Scalar idVal = identity.get(i, j).clone();
-                augVal = new ScalarImpl(augVal.getValue().divide(pivot.getValue(), 20, BigDecimal.ROUND_HALF_UP).toPlainString());
-                idVal = new ScalarImpl(idVal.getValue().divide(pivot.getValue(), 20, BigDecimal.ROUND_HALF_UP).toPlainString());
-                augmented.setValue(i, j, augVal);
-                identity.setValue(i, j, idVal);
+                identity[i][j] = new ScalarImpl(i == j ? "1" : "0");
             }
-
-            // 다른 행들에서 i번째 열을 0으로 만들기
+        }
+        Matrix aug = new MatrixImpl(n, 2 * n, new ScalarImpl("0"));
+        // 왼쪽에 m, 오른쪽에 단위행렬을 합친 확장행렬 생성
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                aug.setValue(i, j, m.getValue(i, j).clone());
+                aug.setValue(i, j + n, identity[i][j].clone());
+            }
+        }
+        // 가우스-조르당 소거법
+        for (int i = 0; i < n; i++) {
+            Scalar diag = aug.getValue(i, i).clone();
+            if (diag.equals(new ScalarImpl("0"))) throw new ArithmeticException("역행렬이 존재하지 않습니다.");
+            for (int j = 0; j < 2 * n; j++) {
+                Scalar val = aug.getValue(i, j).clone();
+                val = new ScalarImpl((new java.math.BigDecimal(val.getValue()).divide(new java.math.BigDecimal(diag.getValue()), java.math.MathContext.DECIMAL128)).toPlainString());
+                aug.setValue(i, j, val);
+            }
             for (int k = 0; k < n; k++) {
                 if (k == i) continue;
-                Scalar factor = augmented.get(k, i).clone();
-                for (int j = 0; j < n; j++) {
-                    Scalar augVal = augmented.get(k, j).clone();
-                    Scalar idVal = identity.get(k, j).clone();
-                    Scalar tempAug = augmented.get(i, j).clone();
-                    Scalar tempId = identity.get(i, j).clone();
-
-                    tempAug.multiply(factor);
-                    tempId.multiply(factor);
-
-                    augVal = new ScalarImpl(augVal.getValue().subtract(tempAug.getValue()).toPlainString());
-                    idVal = new ScalarImpl(idVal.getValue().subtract(tempId.getValue()).toPlainString());
-
-                    augmented.setValue(k, j, augVal);
-                    identity.setValue(k, j, idVal);
+                Scalar factor = aug.getValue(k, i).clone();
+                for (int j = 0; j < 2 * n; j++) {
+                    Scalar val = aug.getValue(k, j).clone();
+                    Scalar sub = aug.getValue(i, j).clone();
+                    sub.multiply(factor);
+                    val = new ScalarImpl((new java.math.BigDecimal(val.getValue()).subtract(new java.math.BigDecimal(sub.getValue()), java.math.MathContext.DECIMAL128)).toPlainString());
+                    aug.setValue(k, j, val);
                 }
             }
         }
-
-        return identity;
-    }
-    public boolean isIdentityMatrix() {
-        if (getRowCount() != getColumnCount()) return false;
-        for (int i = 0; i < getRowCount(); i++) {
-            for (int j = 0; j < getColumnCount(); j++) {
-                BigDecimal val = get(i, j).getValue();
-                if (i == j && val.compareTo(BigDecimal.ONE) != 0) return false;
-                if (i != j && val.compareTo(BigDecimal.ZERO) != 0) return false;
+        // 오른쪽 n x n 부분이 역행렬
+        Scalar[][] inv = new Scalar[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                inv[i][j] = aug.getValue(i, j + n).clone();
             }
         }
-        return true;
+        return new MatrixImpl(inv);
     }
-
-    public void swapColumns(int col1, int col2) {
-        if (col1 < 0 || col2 < 0 || col1 >= getColumnCount() || col2 >= getColumnCount())
-            throw new IndexOutOfBoundsException("Column index out of bounds.");
-        for (List<Scalar> row : elements) {
-            Collections.swap(row, col1, col2);
-        }
-    }
-
-    public void scaleColumn(int colIndex, Scalar scalar) {
-        if (colIndex < 0 || colIndex >= getColumnCount())
-            throw new IndexOutOfBoundsException("Column index out of bounds.");
-        for (int i = 0; i < getRowCount(); i++) {
-            Scalar temp = get(i, colIndex).clone();
-            temp.multiply(scalar);
-            setValue(i, colIndex, temp);
-        }
-    }
-
-    public void addScaledRow(int targetRow, int sourceRow, Scalar scalar) {
-        if (targetRow < 0 || sourceRow < 0 || targetRow >= getRowCount() || sourceRow >= getRowCount())
-            throw new IndexOutOfBoundsException("Row index out of bounds.");
-        for (int j = 0; j < getColumnCount(); j++) {
-            Scalar temp = get(sourceRow, j).clone();
-            temp.multiply(scalar);
-            Scalar newVal = get(targetRow, j).clone();
-            newVal.add(temp);
-            setValue(targetRow, j, newVal);
-        }
-    }
-
-    public void addScaledColumn(int targetCol, int sourceCol, Scalar scalar) {
-        if (targetCol < 0 || sourceCol < 0 || targetCol >= getColumnCount() || sourceCol >= getColumnCount())
-            throw new IndexOutOfBoundsException("Column index out of bounds.");
-        for (int i = 0; i < getRowCount(); i++) {
-            Scalar temp = get(i, sourceCol).clone();
-            temp.multiply(scalar);
-            Scalar newVal = get(i, targetCol).clone();
-            newVal.add(temp);
-            setValue(i, targetCol, newVal);
-        }
-    }
-
-    public Matrix subMatrix(int rowStart, int rowEnd, int colStart, int colEnd) {
-        if (rowStart < 0 || rowEnd >= getRowCount() || colStart < 0 || colEnd >= getColumnCount()
-                || rowStart > rowEnd || colStart > colEnd)
-            throw new IndexOutOfBoundsException("Invalid submatrix range.");
-
-        Scalar[][] sub = new Scalar[rowEnd - rowStart + 1][colEnd - colStart + 1];
-        for (int i = rowStart; i <= rowEnd; i++) {
-            for (int j = colStart; j <= colEnd; j++) {
-                sub[i - rowStart][j - colStart] = get(i, j).clone();
-            }
-        }
-        return new MatrixImpl(sub);
-    }
-
-
-
-
-
-
-
 }

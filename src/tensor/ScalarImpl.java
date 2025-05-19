@@ -1,31 +1,59 @@
 package tensor;
-
 import java.math.BigDecimal;
 import java.util.Random;
 
-class ScalarImpl implements Scalar {
+class ScalarImpl implements Scalar, Comparable<Scalar> {
     private BigDecimal value;
+    ScalarImpl(String val) {      //01번
+        this.value = new BigDecimal(val);
+    }
+    ScalarImpl(int i, int j) {//02번
+        if (i >= j) throw new IllegalArgumentException("i must be less than j");
+        Random rand = new Random();
+        double randomVal = rand.nextDouble(j - i) + i;
+        BigDecimal rounded = new BigDecimal(randomVal).setScale(5, BigDecimal.ROUND_HALF_UP);
+        this.value = rounded;
+    }
+    public String getValue() {
+        return value.toPlainString();  // 또는 stripTrailingZeros().toPlainString()
+    }
 
-    ScalarImpl(String val) { //1번
+    public void setValue(String val) {
         this.value = new BigDecimal(val);
     }
 
-    ScalarImpl(double i, double j) { //2번
-        if (i >= j) throw new IllegalArgumentException("i must be less than j");
-        Random rand = new Random();
-        int randomValue = rand.nextInt(j - i) + i;
-        this.value = new BigDecimal(randomValue);
+    public String toString() {
+        return this.value.toString();
     }
 
-    public BigDecimal getValue() { return value; }
-    public void setValue(BigDecimal val) { this.value = val; }
-    public String toString() { return value.stripTrailingZeros().toPlainString(); } //12번
+    @Override
     public boolean equals(Object obj) {
+        if (this == obj) return true;
         if (!(obj instanceof Scalar)) return false;
-        return value.compareTo(((Scalar) obj).getValue()) == 0;
+        Scalar other = (Scalar) obj;
+        return this.value.compareTo(new java.math.BigDecimal(other.getValue())) == 0;
     }
-    public Scalar clone() { return new ScalarImpl(value.toPlainString()); }
-    public int compareTo(Scalar o) { return value.compareTo(o.getValue()); }
-    public void add(Scalar val) { value = value.add(val.getValue()); }
-    public void multiply(Scalar val) { value = value.multiply(val.getValue()); }
+
+    @Override
+    public int compareTo(Scalar other) {
+        return this.value.compareTo(new java.math.BigDecimal(other.getValue()));
+    }
+
+    @Override
+    public Scalar clone() {
+        return new ScalarImpl(this.value.toPlainString());
+    }
+
+    @Override
+    public void add(Scalar other) {
+        this.value = this.value.add(new java.math.BigDecimal(other.getValue()));
+    }
+
+    @Override
+    public void multiply(Scalar other) {
+        this.value = this.value.multiply(new java.math.BigDecimal(other.getValue()));
+    }
+
+
+
 }
