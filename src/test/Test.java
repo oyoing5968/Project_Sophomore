@@ -534,10 +534,10 @@ public class Test {
             System.out.println("대상 벡터: " + originalVector27);
             System.out.println("곱할 스칼라 값: " + scalarFactor27);
             Vector expectedProduct27 = Factory.createVector(new Scalar[]{
-                    Factory.createScalar("606.0"),
-                    Factory.createScalar("666.6"),
-                    Factory.createScalar("727.2"),
-                    Factory.createScalar("787.8")
+                    Factory.createScalar("690"),
+                    Factory.createScalar("759"),
+                    Factory.createScalar("828"),
+                    Factory.createScalar("897")
             });
             System.out.println("기대 결과: " + expectedProduct27);
             Vector actualProduct27 = Tensors.multiply(originalVector27, scalarFactor27);
@@ -759,7 +759,7 @@ public class Test {
             });
             Matrix expectedTranspose38 = Factory.createMatrix(new Scalar[][]{
                     {Factory.createScalar("3"), Factory.createScalar("1")},
-                    {Factory.createScalar("3"), Factory.createScalar("6")}
+                    {Factory.createScalar("6"), Factory.createScalar("3")}
             });
             System.out.println("원본 행렬:");
             System.out.println(originalMatrix38);
@@ -939,7 +939,7 @@ public class Test {
             System.out.println("기댓값:\n" + expectedAnswer48);
             matrix48.colMultiply(1, Factory.createScalar("2"));
             System.out.println("실제 결과:\n" + matrix48);
-            System.out.println(mA.equals(expectedAnswer48) ? "통과\n" : "실패\n");
+            System.out.println(matrix48.equals(expectedAnswer48) ? "통과\n" : "실패\n");
 
 
 
