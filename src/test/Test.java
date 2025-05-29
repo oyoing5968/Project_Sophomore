@@ -1,7 +1,6 @@
-
 package test;
 import tensor.*;
-import java.util.Random;
+
 
 public class Test {
     public static void main(String[] args) {
@@ -15,10 +14,9 @@ public class Test {
             System.out.println("결과: " + sA);
             System.out.println(sA.equals(expected1) ? "통과\n" : "실패\n");
 
-            // 2. 스칼라 생성 (int, int) 무작위
-            Random random = new Random();
-            System.out.println("2. 스칼라 생성 (int i, int j) 무작위");
-            double randomValue = 1 + random.nextDouble() * 99; // 1~10 사이의 무작위값
+            // 2. 스칼라 생성
+            System.out.println("2. 스칼라 생성 ");
+            Scalar randomValue = Factory.createScalar(1, 100);
             Scalar sB = Factory.createScalar(String.valueOf(randomValue));
             System.out.println("i = 1, j = 100");
             System.out.println(sB);
@@ -44,19 +42,14 @@ public class Test {
 
             // 4. 벡터 생성 (i, j, n) 무작위
             System.out.println("4. 벡터 생성 (i, j, n) 무작위");
-            System.out.println("인자값: i=1, j=100 사이 무작위, n=4");
-            Scalar[] randomVector = new Scalar[4];
-            for (int i = 0; i < 4; i++) {
-                double val = 1 + random.nextDouble() * 99;
-                randomVector[i] = Factory.createScalar(String.valueOf(val));
-            }
-            Vector vB = Factory.createVector(randomVector);
+            System.out.println("인자값: i=1, j=100, n=4");
+            Vector vB = Factory.createVector(1, 100, 4);
             System.out.println("결과: " + vB);
-            System.out.println("기댓값: 모든 원소 ∈ [1, 100]");
+            System.out.println("기댓값: 길이 4, 각 원소가 1~100 사이의 무작위 값");
             boolean allInRange = true;
             for (int i = 0; i < vB.size(); i++) {
                 double val = Double.parseDouble(vB.getValue(i).getValue());
-                if (val < 1 || val > 100    ) {
+                if (val < 1 || val > 100) {
                     allInRange = false;
                     break;
                 }
@@ -92,31 +85,18 @@ public class Test {
             System.out.println(mA.equals(expected6) ? "통과\n" : "실패\n");
 
 
-            // 7. 행렬 생성 (i, j, m, n) 무작위
-            System.out.println("7. 행렬 생성 (i, j, m, n) 무작위");
-            System.out.println("인자값: i=1, j=100 사이 무작위, m=2, n=3");
-            Scalar[][] randomMatrix = new Scalar[2][3];
-            for (int i = 0; i < 2; i++) {
-                for (int j = 0; j < 3; j++) {
-                    double val = 1 + random.nextDouble() * 99;
-                    randomMatrix[i][j] = Factory.createScalar(String.valueOf(val));
-                }
-            }
-            Matrix mB = Factory.createMatrix(randomMatrix);
-            System.out.println("생성된 행렬: " + mB);
-            boolean allMatrixInRange = true;
-            for (int i = 0; i < mB.rowSize(); i++) {
-                for (int j = 0; j < mB.colSize(); j++) {
-                    double val = Double.parseDouble(mB.getValue(i, j).getValue());
-                    if (val < 1 || val > 100) {
-                        allMatrixInRange = false;
-                        break;
-                    }
-                }
-                if (!allMatrixInRange) break;
-            }
-            System.out.println("검사 결과: " + (allMatrixInRange ? "모든 원소가 범위 내" : "범위를 벗어난 값 있음"));
-            System.out.println(allMatrixInRange ? "통과\n" : "실패\n");
+            // 7. 행렬 생성 (m, n, val)
+            System.out.println("7. 행렬 생성 (m, n, val)");
+            System.out.println("인자값: m=2, n=3, val=7");
+            Scalar val = Factory.createScalar("7");
+            Matrix mB = Factory.createMatrix(2, 3, val);
+            Matrix expectedMatrix = Factory.createMatrix(new Scalar[][] {
+                    {Factory.createScalar("7"), Factory.createScalar("7"), Factory.createScalar("7")},
+                    {Factory.createScalar("7"), Factory.createScalar("7"), Factory.createScalar("7")}
+            });
+            System.out.println("기댓값: " + expectedMatrix);
+            System.out.println("결과: " + mB);
+            System.out.println(mB.equals(expectedMatrix) ? "통과\n" : "실패\n");
 
 
 
