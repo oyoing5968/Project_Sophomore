@@ -1,94 +1,127 @@
 package tensor;
+
 import java.util.*;
-
-
-
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 class VectorImpl implements Vector {
     private List<Scalar> elements;
-    VectorImpl(int n, Scalar val) {//03번
+
+    //03
+    VectorImpl(int n, Scalar val) {
         elements = new ArrayList<>();
         for (int i = 0; i < n; i++) elements.add(val.clone());
     }
+
+    //04
     VectorImpl(int i, int j, int n) {
         elements = new ArrayList<>();
         for (int k = 0; k < n; k++) elements.add(new ScalarImpl(i, j));
     }
+
+    //05
     VectorImpl(Scalar[] arr) {
         elements = new ArrayList<>();
         for (Scalar s : arr) elements.add(s.clone());
     }
 
-    public Scalar getValue(int index) {
-        if (index < 0 || index >= elements.size()) {
-            throw new IndexOutOfBoundsException("Index out of bounds: " + index);
-        }
-        return elements.get(index).clone();  // 읽기 - 복사해서 반환
-    }
-
+    //11
+    @Override
     public void setValue(int index, Scalar val) {
         if (index < 0 || index >= elements.size()) {
-            throw new IndexOutOfBoundsException("Index out of bounds: " + index);
+            throw new IndexOutOfBoundsException("인덱스가 범위를 벗어났습니다: " + index);
         }
-        elements.set(index, val.clone());  // 쓰기 - 복사해서 저장
+        elements.set(index, val.clone());
     }
 
+    @Override
+    public Scalar getValue(int index) {
+        if (index < 0 || index >= elements.size()) {
+            throw new IndexOutOfBoundsException("인덱스가 범위를 벗어났습니다: " + index);
+        }
+        return elements.get(index).clone();
+    }
+
+    //13
+    @Override
     public int size() {
         return elements.size();
     }
 
+    //14
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         for (int i = 0; i < elements.size(); i++) {
-            sb.append(elements.get(i).toString());
+            BigDecimal val = new BigDecimal(elements.get(i).getValue());
+            val = val.setScale(5, RoundingMode.HALF_UP);
+            sb.append(val.stripTrailingZeros().toPlainString());
             if (i < elements.size() - 1) sb.append(", ");
         }
         sb.append("]");
         return sb.toString();
     }
 
+    // 15
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof Vector)) return false;
-        Vector other = (Vector) obj;
-        if (this.size() != other.size()) return false;
-        for (int i = 0; i < this.size(); i++) {
-            if (!this.getValue(i).equals(other.getValue(i))) return false;
+        if (obj == null || !(obj instanceof Vector)) return false;
+        Vector that = (Vector) obj;
+        if (this.size() != that.size()) return false;
+
+        BigDecimal tolerance = new BigDecimal("0.000001");
+        for (int i = 0, n = this.size(); i < n; i++) {
+            BigDecimal x = new BigDecimal(this.getValue(i).getValue());
+            BigDecimal y = new BigDecimal(that.getValue(i).getValue());
+            BigDecimal diff = x.subtract(y).abs();
+            if (diff.compareTo(tolerance) > 0) {
+                return false;
+            }
         }
         return true;
     }
 
+    //17
     @Override
     public Vector clone() {
-        Scalar[] arr = new Scalar[elements.size()];
-        for (int i = 0; i < elements.size(); i++) {
-            arr[i] = elements.get(i).clone();
+        int n = elements.size();
+        List<Scalar> clones = new ArrayList<>(n);
+        for (Scalar s : elements) {
+            clones.add(s.clone());
         }
-        return new VectorImpl(arr);
+        Scalar[] clonedArr = clones.toArray(new Scalar[0]);
+        return new VectorImpl(clonedArr);
     }
 
+    //20
     @Override
-    public void add(Vector other) {
-        if (this.size() != other.size()) {
+    public void add(Vector rhs) {
+        int len = size();
+        if (rhs.size() != len) {
             throw new IllegalArgumentException("벡터의 길이가 다릅니다.");
         }
-        for (int i = 0; i < this.size(); i++) {
-            this.elements.get(i).add(other.getValue(i));
+        ListIterator<Scalar> iter = elements.listIterator();
+        int idx = 0;
+        while (iter.hasNext()) {
+            Scalar mine   = iter.next();
+            Scalar theirs = rhs.getValue(idx++);
+            mine.add(theirs);
         }
     }
 
+    //21
     @Override
-    public void multiply(Scalar scalar) {
-        for (int i = 0; i < this.size(); i++) {
-            this.elements.get(i).multiply(scalar);
+    public void multiply(Scalar factor) {
+        for (Scalar elem : elements) {
+            elem.multiply(factor);
         }
     }
 
+    //30
     @Override
-    public Matrix toVerticalMatrix() { //30번
+    public Matrix toVerticalMatrix() {
         int n = this.size();
         Scalar[][] arr = new Scalar[n][1];
         for (int i = 0; i < n; i++) {
@@ -97,17 +130,33 @@ class VectorImpl implements Vector {
         return new MatrixImpl(arr);
     }
 
+    //31
     @Override
-    public Matrix toHorizentalMatrix() { //31번
-        int n = this.size();
-        Scalar[][] arr = new Scalar[1][n];
-        for (int i = 0; i < n; i++) {
-            arr[0][i] = this.getValue(i).clone();
+    public Matrix toHorizontalMatrix() {
+        Scalar[] rowData = new Scalar[size()];
+        int idx = 0;
+        for (Scalar elem : elements) {
+            rowData[idx++] = elem.clone();
         }
-        return new MatrixImpl(arr);
+        return new MatrixImpl(new Scalar[][] { rowData });
     }
 
+    //26
+    static Vector add(Vector v1, Vector v2) {
+        if (v1.size() != v2.size()) {
+            throw new IllegalArgumentException("벡터의 길이가 다릅니다.");
+        }
+        Scalar[] arr = new Scalar[v1.size()];
+        for (int i = 0; i < v1.size(); i++) {
+            arr[i] = ScalarImpl.add(v1.getValue(i), v2.getValue(i));
+        }
+        return new VectorImpl(arr);
+    }
 
-
-
+    //27
+    static Vector multiply(Vector v, Scalar s) {
+        Vector result = v.clone();
+        result.multiply(s);
+        return result;
+    }
 }
