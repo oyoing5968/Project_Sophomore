@@ -1,59 +1,124 @@
 package tensor;
+
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Random;
+import java.util.Objects;
 
 class ScalarImpl implements Scalar, Comparable<Scalar> {
     private BigDecimal value;
-    ScalarImpl(String val) {      //01번
-        this.value = new BigDecimal(val);
+
+    //01
+    ScalarImpl(String val) {
+        BigDecimal tempValue;
+        try {
+            tempValue = new BigDecimal(val);
+        } catch (NumberFormatException e) {
+            throw new TensorException("스칼라 값이 올바르지 않습니다.");
+        }
+
+        try {
+            value = tempValue.setScale(5, RoundingMode.HALF_UP);
+        } catch (ArithmeticException e) {
+            throw new TensorException("스칼라 값의 소수점 처리 중 산술 오류가 발생하였습니다.");
+        }
     }
-    ScalarImpl(int i, int j) {//02번
+
+    //02
+    ScalarImpl(int i, int j) {
         if (i >= j) throw new IllegalArgumentException("i must be less than j");
         Random rand = new Random();
-        double randomVal = rand.nextDouble(j - i) + i;
-        BigDecimal rounded = new BigDecimal(randomVal).setScale(5, BigDecimal.ROUND_HALF_UP);
-        this.value = rounded;
-    }
-    public String getValue() {
-        return value.toPlainString();  // 또는 stripTrailingZeros().toPlainString()
+        BigDecimal range = new BigDecimal(j - i);
+        BigDecimal randomFactor = new BigDecimal(rand.nextDouble());
+        BigDecimal calculatedValue = randomFactor.multiply(range).add(new BigDecimal(i));
+        value = calculatedValue.setScale(5, RoundingMode.HALF_UP);
     }
 
+    // 12
+    @Override
     public void setValue(String val) {
-        this.value = new BigDecimal(val);
+        BigDecimal parsed;
+        try {
+            parsed = new BigDecimal(val);
+        } catch (NumberFormatException e) {
+            throw new TensorException("올바른 값을 입력하지 않으셨습니다.");
+        }
+        BigDecimal scaled = parsed.setScale(5, RoundingMode.HALF_UP);
+        this.value = scaled;
     }
 
+    @Override
+    public String getValue() {
+        return value.stripTrailingZeros().toPlainString();
+    }
+
+    //14
+    @Override
     public String toString() {
-        return this.value.toString();
+        BigDecimal val = value.setScale(5, RoundingMode.HALF_UP);
+        return val.stripTrailingZeros().toPlainString();
     }
 
+    //15
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof Scalar)) return false;
+        if (obj == null || !(obj instanceof Scalar)) return false;
         Scalar other = (Scalar) obj;
-        return this.value.compareTo(new java.math.BigDecimal(other.getValue())) == 0;
+
+        BigDecimal val1 = this.value;
+        BigDecimal val2 = new BigDecimal(other.getValue());
+        BigDecimal epsilon = new BigDecimal("0.000001");
+        BigDecimal diff = val1.subtract(val2).abs();
+
+        return diff.compareTo(epsilon) <= 0;
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
+    }
+
+    //16
     @Override
     public int compareTo(Scalar other) {
-        return this.value.compareTo(new java.math.BigDecimal(other.getValue()));
+        BigDecimal bigDecimalValue = new BigDecimal(other.getValue());
+        return value.compareTo(bigDecimalValue);
     }
 
+    //17
     @Override
     public Scalar clone() {
-        return new ScalarImpl(this.value.toPlainString());
+        return new ScalarImpl(value.toPlainString());
     }
 
+    //18
     @Override
     public void add(Scalar other) {
-        this.value = this.value.add(new java.math.BigDecimal(other.getValue()));
+        BigDecimal bigDecimalVal = new BigDecimal(other.getValue());
+        value = value.add(bigDecimalVal);
+        value = value.setScale(5, RoundingMode.HALF_UP);
     }
 
+    //19
     @Override
     public void multiply(Scalar other) {
-        this.value = this.value.multiply(new java.math.BigDecimal(other.getValue()));
+        BigDecimal otherBigDecimalVal = new BigDecimal(other.getValue());
+        value = value.multiply(otherBigDecimalVal);
+        value = value.setScale(5, RoundingMode.HALF_UP);
     }
 
+    //24
+    static Scalar add(Scalar s1, Scalar s2) {
+        BigDecimal v1 = new BigDecimal(s1.getValue());
+        BigDecimal v2 = new BigDecimal(s2.getValue());
+        return new ScalarImpl(v1.add(v2).toPlainString());
+    }
 
-
+    //25
+    static Scalar multiply(Scalar s1, Scalar s2) {
+        BigDecimal v1 = new BigDecimal(s1.getValue());
+        BigDecimal v2 = new BigDecimal(s2.getValue());
+        return new ScalarImpl(v1.multiply(v2).toPlainString());
+    }
 }
