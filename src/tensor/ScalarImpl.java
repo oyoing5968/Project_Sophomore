@@ -10,19 +10,19 @@ class ScalarImpl implements Scalar, Comparable<Scalar> {
 
     //01
     ScalarImpl(String val) {
-        BigDecimal tempValue;
+        BigDecimal parsedValue;
         try {
-            tempValue = new BigDecimal(val);
+            parsedValue = new BigDecimal(val);
         } catch (NumberFormatException e) {
             throw new TensorException("스칼라 값이 올바르지 않습니다.");
         }
-
         try {
-            value = tempValue.setScale(5, RoundingMode.HALF_UP);
+            this.value = parsedValue.setScale(5, RoundingMode.HALF_UP);
         } catch (ArithmeticException e) {
             throw new TensorException("스칼라 값의 소수점 처리 중 산술 오류가 발생하였습니다.");
         }
     }
+
 
     //02
     ScalarImpl(int i, int j) {
@@ -95,17 +95,17 @@ class ScalarImpl implements Scalar, Comparable<Scalar> {
     //18
     @Override
     public void add(Scalar other) {
-        BigDecimal bigDecimalVal = new BigDecimal(other.getValue());
-        value = value.add(bigDecimalVal);
-        value = value.setScale(5, RoundingMode.HALF_UP);
+        BigDecimal otherValue = new BigDecimal(other.getValue());
+        BigDecimal result = this.value.add(otherValue);
+        this.value = result.setScale(5, RoundingMode.HALF_UP);
     }
 
     //19
     @Override
     public void multiply(Scalar other) {
-        BigDecimal otherBigDecimalVal = new BigDecimal(other.getValue());
-        value = value.multiply(otherBigDecimalVal);
-        value = value.setScale(5, RoundingMode.HALF_UP);
+        BigDecimal multiplier = new BigDecimal(other.getValue());
+        BigDecimal product = this.value.multiply(multiplier);
+        this.value = product.setScale(5, RoundingMode.HALF_UP);
     }
 
     //24
