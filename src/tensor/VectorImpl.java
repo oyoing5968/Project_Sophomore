@@ -9,22 +9,29 @@ class VectorImpl implements Vector {
 
     //03
     VectorImpl(int n, Scalar val) {
-        elements = new ArrayList<>();
-        for (int i = 0; i < n; i++) elements.add(val.clone());
+        elements = new ArrayList<>(Collections.nCopies(n, val.clone()));
+        for (int i = 1; i < n; i++) {
+            elements.set(i, val.clone());
+        }
     }
 
     //04
     VectorImpl(int i, int j, int n) {
         elements = new ArrayList<>();
-        for (int k = 0; k < n; k++) elements.add(new ScalarImpl(i, j));
+        for (int count = 0; count < n; count++) {
+            Scalar scalar = new ScalarImpl(i, j);
+            elements.add(scalar);
+        }
     }
 
     //05
     VectorImpl(Scalar[] arr) {
-        elements = new ArrayList<>();
-        for (Scalar s : arr) elements.add(s.clone());
+        elements = new ArrayList<>(arr.length);
+        for (int i = 0; i < arr.length; i++) {
+            Scalar copiedScalar = arr[i].clone();
+            elements.add(copiedScalar);
+        }
     }
-
     //11
     @Override
     public void setValue(int index, Scalar val) {
