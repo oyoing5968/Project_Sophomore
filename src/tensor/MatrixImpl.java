@@ -11,16 +11,20 @@ class MatrixImpl implements Matrix {
 
     // 06
     MatrixImpl(int m, int n, Scalar val) {
-        if (m <= 0 || n <= 0) throw new IllegalArgumentException("행렬의 크기를 잘못 설정하셨습니다.");
-        elements = new ArrayList<>();
-        for (int i = 0; i < m; i++) {
-            List<Scalar> row = new ArrayList<>();
-            for (int j = 0; j < n; j++) {
-                row.add(val.clone());
+        if (m <= 0 || n <= 0) {
+            throw new IllegalArgumentException("행렬의 크기를 잘못 설정하셨습니다.");
+        }
+        elements = new ArrayList<>(m);
+        for (int rowIndex = 0; rowIndex < m; rowIndex++) {
+            List<Scalar> rowList = new ArrayList<>(n);
+            for (int colIndex = 0; colIndex < n; colIndex++) {
+                Scalar clonedVal = val.clone();
+                rowList.add(clonedVal);
             }
-            elements.add(row);
+            elements.add(rowList);
         }
     }
+
 
     // 07
     MatrixImpl(int i, int j, int m, int n) {
@@ -38,104 +42,117 @@ class MatrixImpl implements Matrix {
     // 08
     MatrixImpl(String csvPath) throws IOException {
         elements = new ArrayList<>();
-        try (FileReader fr = new FileReader(csvPath);
-             BufferedReader br = new BufferedReader(fr)) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty()) {
-                    continue;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(csvPath))) {
+            String currentLine;
+            while ((currentLine = reader.readLine()) != null) {
+                currentLine = currentLine.trim();
+
+                if (currentLine.isEmpty()) continue;
+                List<Scalar> rowList = new ArrayList<>();
+                String[] tokens = currentLine.split(",");
+
+                for (String token : tokens) {
+                    String trimmed = token.trim();
+                    Scalar value = new ScalarImpl(trimmed);
+                    rowList.add(value);
                 }
-                List<Scalar> row = new ArrayList<>();
-                String[] stringValues = line.split(",");
-                for (String strVal : stringValues) {
-                    row.add(new ScalarImpl(strVal.trim()));
-                }
-                elements.add(row);
+
+                elements.add(rowList);
             }
         }
     }
 
+
     // 09
     MatrixImpl(Scalar[][] arr) {
-        elements = new ArrayList<>();
-        for (Scalar[] rw : arr) {
-            List<Scalar> row = new ArrayList<>();
-            for (Scalar scal : rw) {
-                row.add(scal.clone());
+        elements = new ArrayList<>(arr.length);
+
+        for (int i = 0; i < arr.length; i++) {
+            Scalar[] rowArray = arr[i];
+            List<Scalar> rowList = new ArrayList<>(rowArray.length);
+
+            for (int j = 0; j < rowArray.length; j++) {
+                Scalar copied = rowArray[j].clone();
+                rowList.add(copied);
             }
-            elements.add(row);
+            elements.add(rowList);
         }
     }
 
     // 10
     MatrixImpl(int size) {
-        if (size <= 0) throw new IllegalArgumentException("잘못된 인자를 입력하였습니다.");
+        if (size <= 0) {
+            throw new IllegalArgumentException("잘못된 인자를 입력하였습니다.");
+        }
+        elements = new ArrayList<>(size);
 
-        Scalar one = new ScalarImpl("1");
-        Scalar zero = new ScalarImpl("0");
-        elements = new ArrayList<>();
+        for (int rowIdx = 0; rowIdx < size; rowIdx++) {
+            List<Scalar> rowList = new ArrayList<>(size);
 
-        for (int i = 0; i < size; i++) {
-            List<Scalar> row = new ArrayList<>();
-            for (int j = 0; j < size; j++) {
-                if (i == j) {
-                    row.add(one.clone());
-                } else {
-                    row.add(zero.clone());
-                }
+            for (int colIdx = 0; colIdx < size; colIdx++) {
+                String val = (rowIdx == colIdx) ? "1" : "0";
+                rowList.add(new ScalarImpl(val));   // 각 원소를 새로 생성
             }
-            elements.add(row);
+            elements.add(rowList);
         }
     }
+
 
     // 11
     @Override
     public void setValue(int row, int col, Scalar val) {
-        if (row < 0 || row >= rowSize() || col < 0 || col >= colSize()) {
-            throw new IndexOutOfBoundsException("인덱스 범위를 벗어났습니다.");
-        }
-        elements.get(row).set(col, val.clone());
+        validateIndices(row, col);
+        List<Scalar> targetRow = elements.get(row);
+        Scalar clonedVal = val.clone();
+        targetRow.set(col, clonedVal);
     }
 
     @Override
     public Scalar getValue(int row, int col) {
+        validateIndices(row, col);
+        Scalar original = elements.get(row).get(col);
+        return original.clone();
+    }
+
+    private void validateIndices(int row, int col) {
         if (row < 0 || row >= rowSize() || col < 0 || col >= colSize()) {
             throw new IndexOutOfBoundsException("인덱스 범위를 벗어났습니다.");
         }
-        return elements.get(row).get(col).clone();
     }
 
     // 13
     @Override
     public int rowSize() {
-        return elements.size();
+        int rowCount = elements.size();
+        return rowCount;
     }
 
     @Override
     public int colSize() {
-        if (elements.isEmpty()) return 0;
-        return elements.get(0).size();
+        return (rowSize() == 0) ? 0 : elements.get(0).size();
     }
 
     // 14
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < rowSize(); i++) {
-            sb.append("[");
-            List<Scalar> row = elements.get(i);
-            for (int j = 0; j < row.size(); j++) {
-                // 소수점 5자리까지 표시
-                BigDecimal val = new BigDecimal(row.get(j).getValue());
-                val = val.setScale(5, RoundingMode.HALF_UP);
-                sb.append(val.stripTrailingZeros().toPlainString());
-                if (j < row.size() - 1) sb.append(", ");
+
+        for (int rowIdx = 0; rowIdx < rowSize(); rowIdx++) {
+            List<Scalar> row = elements.get(rowIdx);
+            StringJoiner joiner = new StringJoiner(", ", "[", "]");
+
+            for (Scalar s : row) {
+                BigDecimal rounded = new BigDecimal(s.getValue())
+                        .setScale(5, RoundingMode.HALF_UP);
+                joiner.add(rounded.stripTrailingZeros().toPlainString());
             }
-            sb.append("]");
-            if (i < rowSize() - 1) sb.append("\n");
+            sb.append(joiner);
+            if (rowIdx < rowSize() - 1) sb.append('\n');
         }
         return sb.toString();
     }
+
 
     // 15
     @Override
@@ -553,150 +570,170 @@ class MatrixImpl implements Matrix {
     // 51
     @Override
     public Matrix getRREF() {
-        Matrix copy = this.clone();
-        int lead = 0;
-        int rowCount = copy.rowSize();
-        int colCount = copy.colSize();
-        for (int r = 0; r < rowCount; r++) {
-            if (lead >= colCount) break;
-            int i = r;
-            while (i < rowCount && copy.getValue(i, lead).equals(new ScalarImpl("0"))) {
-                i++;
+        Matrix rref = this.clone();
+        int pivotRow = 0;
+        int pivotCol = 0;
+        final int totalRows = rref.rowSize();
+        final int totalCols = rref.colSize();
+
+        while (pivotRow < totalRows && pivotCol < totalCols) {
+
+            int maxRow = pivotRow;
+            while (maxRow < totalRows &&
+                    rref.getValue(maxRow, pivotCol).equals(new ScalarImpl("0"))) {
+                maxRow++;
             }
-            if (i == rowCount) {
-                lead++;
-                if (lead >= colCount) break;
-                r--;
+
+            if (maxRow == totalRows) {
+                pivotCol++;
                 continue;
             }
-            if (i != r) {
-                for (int k = 0; k < colCount; k++) {
-                    Scalar tmp = copy.getValue(r, k);
-                    copy.setValue(r, k, copy.getValue(i, k));
-                    copy.setValue(i, k, tmp);
+
+            if (maxRow != pivotRow) {
+                for (int c = 0; c < totalCols; c++) {
+                    Scalar temp = rref.getValue(pivotRow, c);
+                    rref.setValue(pivotRow, c, rref.getValue(maxRow, c));
+                    rref.setValue(maxRow, c, temp);
                 }
             }
-            Scalar lv = copy.getValue(r, lead).clone();
-            for (int k = 0; k < colCount; k++) {
-                Scalar val = copy.getValue(r, k).clone();
-                if (!lv.equals(new ScalarImpl("0"))) {
-                    val = new ScalarImpl((new BigDecimal(val.getValue())
-                            .divide(new BigDecimal(lv.getValue()), MathContext.DECIMAL128))
-                            .toPlainString());
-                }
-                copy.setValue(r, k, val);
-            }
-            for (int i2 = 0; i2 < rowCount; i2++) {
-                if (i2 != r) {
-                    Scalar lv2 = copy.getValue(i2, lead).clone();
-                    for (int k = 0; k < colCount; k++) {
-                        Scalar val = copy.getValue(i2, k).clone();
-                        Scalar sub = copy.getValue(r, k).clone();
-                        sub.multiply(lv2);
-                        val = new ScalarImpl((new BigDecimal(val.getValue())
-                                .subtract(new BigDecimal(sub.getValue()), MathContext.DECIMAL128))
-                                .toPlainString());
-                        copy.setValue(i2, k, val);
-                    }
+
+            Scalar pivotVal = rref.getValue(pivotRow, pivotCol).clone();
+            if (!pivotVal.equals(new ScalarImpl("0"))) {
+                for (int c = 0; c < totalCols; c++) {
+                    BigDecimal num   = new BigDecimal(rref.getValue(pivotRow, c).getValue());
+                    BigDecimal denom = new BigDecimal(pivotVal.getValue());
+                    Scalar scaled = new ScalarImpl(num.divide(denom, MathContext.DECIMAL128).toPlainString());
+                    rref.setValue(pivotRow, c, scaled);
                 }
             }
-            lead++;
+
+            for (int r = 0; r < totalRows; r++) {
+                if (r == pivotRow) continue;
+
+                Scalar factor = rref.getValue(r, pivotCol).clone();
+                if (factor.equals(new ScalarImpl("0"))) continue;
+
+                for (int c = 0; c < totalCols; c++) {
+                    BigDecimal original = new BigDecimal(rref.getValue(r, c).getValue());
+                    BigDecimal pivotValC = new BigDecimal(rref.getValue(pivotRow, c).getValue());
+                    BigDecimal sub = pivotValC.multiply(new BigDecimal(factor.getValue()), MathContext.DECIMAL128);
+                    Scalar updated = new ScalarImpl(original.subtract(sub, MathContext.DECIMAL128).toPlainString());
+                    rref.setValue(r, c, updated);
+                }
+            }
+
+            pivotRow++;
+            pivotCol++;
         }
-        return copy;
+
+        return rref;
     }
+
 
     // 52
     @Override
     public boolean isRREF() {
-        Scalar zeroScalar = new ScalarImpl("0");
-        Scalar oneScalar = new ScalarImpl("1");
-        int previousLeadCol = -1;
-        boolean encounteredZeroRow = false;
+        final Scalar ZERO = new ScalarImpl("0");
+        final Scalar ONE  = new ScalarImpl("1");
 
-        for (int r = 0; r < rowSize(); r++) {
-            int currentLeadCol = -1;
-            for (int c = 0; c < colSize(); c++) {
-                if (!getValue(r, c).equals(zeroScalar)) {
-                    currentLeadCol = c;
-                    break;
-                }
+        int lastPivotCol = -1;
+        boolean blankRowSeen = false;
+
+        for (int row = 0; row < rowSize(); row++) {
+            int pivotCol = findFirstNonZero(row, ZERO);
+
+            if (pivotCol == -1) {
+                blankRowSeen = true;
+                continue;
             }
-            if (currentLeadCol != -1) {
-                if (encounteredZeroRow) {
-                    return false;
-                }
-                if (!getValue(r, currentLeadCol).equals(oneScalar)) {
-                    return false;
-                }
-                if (currentLeadCol <= previousLeadCol) {
-                    return false;
-                }
-                for (int k = 0; k < rowSize(); k++) {
-                    if (k != r) {
-                        if (!getValue(k, currentLeadCol).equals(zeroScalar)) {
-                            return false;
-                        }
-                    }
-                }
-                previousLeadCol = currentLeadCol;
-            } else {
-                encounteredZeroRow = true;
-            }
+            if (blankRowSeen) return false;
+
+            if (!getValue(row, pivotCol).equals(ONE)) return false;
+
+            if (!isPivotColumnClean(pivotCol, row, ZERO)) return false;
+
+            if (pivotCol <= lastPivotCol) return false;
+            lastPivotCol = pivotCol;
         }
         return true;
     }
 
-    // 53
+    private int findFirstNonZero(int row, Scalar zero) {
+        for (int col = 0; col < colSize(); col++) {
+            if (!getValue(row, col).equals(zero)) {
+                return col;
+            }
+        }
+        return -1;
+    }
+
+    private boolean isPivotColumnClean(int pivotCol, int pivotRow, Scalar zero) {
+        for (int r = 0; r < rowSize(); r++) {
+            if (r == pivotRow) continue;
+            if (!getValue(r, pivotCol).equals(zero)) return false;
+        }
+        return true;
+    }
+
+
     @Override
     public Scalar getDeterminant() {
         if (!isSquare()) {
             throw new SizeMismatchException("행렬식은 정사각 행렬에서만 구할 수 있습니다.");
         }
-        int n = rowSize();
-        if (n == 0) {
+        int size = rowSize();
+        if (size == 0) {
             throw new SizeMismatchException("0x0 행렬의 행렬식은 지원하지 않습니다.");
         }
-        if (n == 1) {
-            Scalar element = this.getValue(0, 0);
-            if (element == null) {
+        if (size == 1) {
+            Scalar single = getValue(0, 0);
+            if (single == null) {
                 throw new NullPointerException("1x1 행렬의 요소가 null입니다.");
             }
-            return element.clone();
+            return single.clone();
         }
-        if (n == 2) {
-            Scalar a = this.getValue(0, 0);
-            Scalar b = this.getValue(0, 1);
-            Scalar c = this.getValue(1, 0);
-            Scalar d = this.getValue(1, 1);
+        if (size == 2) {
+            Scalar a = getValue(0, 0);
+            Scalar b = getValue(0, 1);
+            Scalar c = getValue(1, 0);
+            Scalar d = getValue(1, 1);
+
             if (a == null || b == null || c == null || d == null) {
                 throw new NullPointerException("2x2 행렬의 요소 중 null 값이 있습니다.");
             }
-            Scalar temp_ad = a.clone();
-            temp_ad.multiply(d.clone());
-            Scalar temp_bc = b.clone();
-            temp_bc.multiply(c.clone());
-            Scalar minusOne = new ScalarImpl("-1");
-            temp_bc.multiply(minusOne);
-            temp_ad.add(temp_bc);
-            return temp_ad;
+            Scalar ad = a.clone();
+            ad.multiply(d.clone());
+            Scalar bc = b.clone();
+
+            bc.multiply(c.clone());
+            bc.multiply(new ScalarImpl("-1"));
+
+            ad.add(bc);
+            return ad;
         }
-        Scalar determinantSum = new ScalarImpl("0");
-        Scalar flippedSign = new ScalarImpl("1");
-        for (int j = 0; j < colSize(); j++) {
-            Scalar elementInFirstRow = this.getValue(0, j);
-            if (elementInFirstRow == null) {
+        Scalar sum = new ScalarImpl("0");
+        Scalar sign = new ScalarImpl("1");
+
+        for (int col = 0; col < colSize(); col++) {
+            Scalar pivot = getValue(0, col);
+            if (pivot == null) {
                 throw new NullPointerException("행렬 요소가 null입니다.");
             }
-            Matrix minorMat = this.minorSubMatrix(0, j);
-            Scalar minorDet = minorMat.getDeterminant();
-            Scalar term = elementInFirstRow.clone();
-            term.multiply(minorDet);
-            term.multiply(flippedSign);
-            determinantSum.add(term);
-            flippedSign.multiply(new ScalarImpl("-1"));
+
+            Matrix minor = minorSubMatrix(0, col);
+            Scalar detMinor = minor.getDeterminant();
+
+            Scalar term = pivot.clone();
+            term.multiply(detMinor);
+            term.multiply(sign);
+            sum.add(term);
+            sign.multiply(new ScalarImpl("-1"));
         }
-        return determinantSum;
+
+        return sum;
     }
+
+
 
     // 54
     @Override
